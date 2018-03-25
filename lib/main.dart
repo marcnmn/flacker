@@ -28,33 +28,30 @@ class StartStopPage extends StatefulWidget {
 
 class _StartStopPageState extends State<StartStopPage>
     with SingleTickerProviderStateMixin {
-  Animation<double> animation;
   AnimationController controller;
+  Animation<double> animation;
 
-  String _title = 'yoyoy';
-  String _background = _workBkg;
-  var _model = [];
-  DecorationTween _dt;
-  bool _workMode = true;
+  String _workTitle = 'Heute gearbeitet';
+  String _workDuration = '00:00:00';
 
-  static const _startBtn = 'Start 😖';
+  List<Period> _periods = [];
+  Period _current;
+
+  static const _startBtnStart = 'Start 😖';
+  static const _startBtnCtn = 'Weiter 😩';
   static const _pauseBtn = 'Pause 🎉';
   static const _saveBtn = 'Speichern 💾';
+  static const _animDur = const Duration(milliseconds: 500);
 
   static const _workBkg = 'images/background_pattern.png';
   static const _pauseBkg = 'images/background_pattern_pause.png';
 
-  DateTime start = new DateTime.now();
-
   initState() {
     super.initState();
-    controller = new AnimationController(
-        duration: const Duration(milliseconds: 500), vsync: this);
-    animation = new Tween(begin: 0.0, end: 1.0).animate(controller)
-      ..addListener(() => setState(() => {}));
-    // todo: fetch from storage
-    // _runClock();
-    _model.add(new Period.start());
+    controller = new AnimationController(duration: _animDur, vsync: this);
+    animation = new Tween(begin: 0.0, end: 1.0).animate(controller);
+    animation.addListener(() => setState(() => {}));
+    _runClock();
   }
 
   dispose() {
@@ -62,26 +59,27 @@ class _StartStopPageState extends State<StartStopPage>
     super.dispose();
   }
 
-  BoxDecoration _bkg(String asset) => new BoxDecoration(
-          image: new DecorationImage(
-        image: new AssetImage(asset),
-        fit: BoxFit.scaleDown,
-        repeat: ImageRepeat.repeat,
-      ));
-
-  void _incrementCounter(String msg) {
-    // share(msg);
-    setState(() {
-      _title = msg;
-    });
-    _workMode = !_workMode;
-    if (_workMode)
-      controller.forward();
-    else
-      controller.reverse();
+  void _start() {
+    _current = new Period.start();
+    controller.forward();
   }
 
-  Period _current() => _model.last;
+  void _pause() {
+    if (_current == null || _current.x == null) return;
+    _current.y = new DateTime.now();
+    _periods.add(_current);
+    controller.reverse();
+    _current = null;
+  }
+
+  void _saveDay() {
+    if (_periods.length <= 0 || _current != null) return;
+    // todo: save action
+    print('saveDay');
+    _periods.clear();
+    _current = null;
+    _updateDate();
+  }
 
   void _runClock() async {
     final stream = new Stream.periodic(new Duration(seconds: 1));
@@ -92,15 +90,16 @@ class _StartStopPageState extends State<StartStopPage>
 
   void _updateDate() {
     setState(() {
-      Duration diff = new DateTime.now().difference(start);
-      _title = [
-        diff.inHours.toString().padLeft(2, '0'),
-        (diff.inMinutes % 60).toString().padLeft(2, '0'),
-        (diff.inSeconds % 60).toString().padLeft(2, '0'),
-      ].join(':');
-      print(_current());
+      Duration duration = _current != null ? _current.duration : new Duration();
+      _periods.forEach((p) => duration += p.duration);
+      _workDuration = Period.durationToString(duration);
     });
   }
+
+  String get _startLabel => _periods.isEmpty ? _startBtnStart : _startBtnCtn;
+  get _startFn => _current?.x == null ? _start : null;
+  get _pauseFn => _current?.x != null ? _pause : null;
+  get _saveFn => _periods.isNotEmpty && _current == null ? _saveDay : null;
 
   @override
   Widget build(BuildContext context) {
@@ -117,24 +116,22 @@ class _StartStopPageState extends State<StartStopPage>
             new Center(
               child:
                   new Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                new Text(_title, textScaleFactor: 4.0),
+                new Text(_workTitle, textScaleFactor: 1.4),
+                new Container(height: 10.0),
+                new Text(_workDuration, textScaleFactor: 4.0),
                 new Container(height: 50.0),
                 new Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     new FlatButton(
-                        child: const Text(_startBtn),
-                        onPressed: () => _incrementCounter(_startBtn)),
+                        child: new Text(_startLabel), onPressed: _startFn),
                     new Container(width: 20.0),
                     new FlatButton(
-                        child: const Text(_pauseBtn),
-                        onPressed: () => _incrementCounter(_pauseBtn)),
+                        child: const Text(_pauseBtn), onPressed: _pauseFn),
                   ],
                 ),
                 new Container(height: 50.0),
-                new FlatButton(
-                    child: const Text(_saveBtn),
-                    onPressed: () => _incrementCounter(_saveBtn)),
+                new FlatButton(child: const Text(_saveBtn), onPressed: _saveFn),
               ]),
             ),
           ],
@@ -149,4 +146,25 @@ class Period {
   Period.start() {
     this.x = new DateTime.now();
   }
+
+  Duration get duration {
+    if (this.x == null) return new Duration();
+    if (this.y == null) return new DateTime.now().difference(this.x);
+    return this.y.difference(this.x);
+  }
+
+  static String durationToString(Duration dur) {
+    return [
+      dur.inHours.toString().padLeft(2, '0'),
+      (dur.inMinutes % 60).toString().padLeft(2, '0'),
+      (dur.inSeconds % 60).toString().padLeft(2, '0'),
+    ].join(':');
+  }
 }
+
+BoxDecoration _bkg(String asset) => new BoxDecoration(
+        image: new DecorationImage(
+      image: new AssetImage(asset),
+      fit: BoxFit.scaleDown,
+      repeat: ImageRepeat.repeat,
+    ));
