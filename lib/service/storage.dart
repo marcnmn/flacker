@@ -6,7 +6,7 @@ import 'package:tracker/model/period.dart';
 import 'package:tracker/service/common.dart';
 
 class StorageService {
-  final String _userCol = 'users';
+  // final String _userCol = 'users';
   final String _periodCol = 'period';
 
   Future<QuerySnapshot> getAll(String uid) {
@@ -49,6 +49,7 @@ class StorageService {
         .document(_createKey(p.userId, p.date))
         .setData(p.toMap())
         .catchError((e) => print(e));
+    return true;
   }
 
   String _createKey(String uid, String key) => '${uid}_$key';

@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Periods _periods = new Periods('', '');
   Period _current;
-  String _userId = 'marc-123';
+  // String _userId = 'marc-123';
   FirebaseUser _user;
 
   final AuthHandler authHandler = new AuthHandler();
@@ -72,8 +72,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     loadCtrl.forward();
   }
 
+  @override
   dispose() {
     controller.dispose();
+    loadCtrl.dispose();
     super.dispose();
   }
 
