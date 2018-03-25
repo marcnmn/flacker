@@ -104,7 +104,7 @@ class _StartStopPageState extends State<StartStopPage>
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-        appBar: new AppBar(title: new Text('Track Your 🤬')),
+        appBar: new AppBar(title: new Text('Track Your 🤬 Work')),
         body: new Stack(
           children: <Widget>[
             new Opacity(
@@ -124,14 +124,18 @@ class _StartStopPageState extends State<StartStopPage>
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     new FlatButton(
-                        child: new Text(_startLabel), onPressed: _startFn),
+                        child: new Text(_startLabel, textScaleFactor: 1.25),
+                        onPressed: _startFn),
                     new Container(width: 20.0),
                     new FlatButton(
-                        child: const Text(_pauseBtn), onPressed: _pauseFn),
+                        child: const Text(_pauseBtn, textScaleFactor: 1.25),
+                        onPressed: _pauseFn),
                   ],
                 ),
                 new Container(height: 50.0),
-                new FlatButton(child: const Text(_saveBtn), onPressed: _saveFn),
+                new FlatButton(
+                    child: const Text(_saveBtn, textScaleFactor: 1.25),
+                    onPressed: _saveFn),
               ]),
             ),
           ],
